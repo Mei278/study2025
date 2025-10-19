@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block content %}
+<h4>不合格品提报</h4>
+
+<form action="/rejections/add" method="post" class="row g-3 mb-4">
+  <div class="col-md-3">
+    <select name="inspection_id" class="form-control" required>
+      <option value="">选择检验记录</option>
+      {% for i in inspections %}
+        <option value="{{ i.id }}">{{ i.item_name }} ({{ i.id }})</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-3">
+    <input type="text" name="item_name" class="form-control" placeholder="物料名称" required>
+  </div>
+  <div class="col-md-4">
+    <input type="text" name="reason" class="form-control" placeholder="不合格原因" required>
+  </div>
+  <div class="col-md-2">
+    <button type="submit" class="btn btn-danger w-100">提报</button>
+  </div>
+</form>
+
+<table class="table table-bordered">
+  <thead><tr><th>ID</th><th>检验ID</th><th>物料</th><th>原因</th></tr></thead>
+  <tbody>
+    {% for r in rejections %}
+    <tr>
+      <td>{{ r.id }}</td>
+      <td>{{ r.inspection_id }}</td>
+      <td>{{ r.item_name }}</td>
+      <td>{{ r.reason }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

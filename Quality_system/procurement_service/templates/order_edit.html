@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head><title>编辑采购订单</title></head>
+<body>
+<h2>编辑采购订单</h2>
+<form action="/orders/edit/{{ order[0] }}" method="post">
+单号: <input type="text" name="order_number" value="{{ order[1] }}"><br>
+供应商: <input type="text" name="supplier" value="{{ order[2] }}"><br>
+产品: <input type="text" name="product_name" value="{{ order[3] }}"><br>
+数量: <input type="number" name="quantity" value="{{ order[4] }}"><br>
+到货日期: <input type="date" name="arrival_date" value="{{ order[5] }}"><br>
+状态: <input type="text" name="status" value="{{ order[6] }}"><br>
+<input type="submit" value="提交">
+</form>
+</body>
+</html>

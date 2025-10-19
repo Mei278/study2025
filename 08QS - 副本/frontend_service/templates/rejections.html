@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>不合格产品处理</title>
+    <style>
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            margin: 40px;
+            background-color: #f9f9f9;
+        }
+        h2 {
+            color: #333;
+        }
+        table {
+            width: 95%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: #fff;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px 12px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .error {
+            color: red;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .nav {
+            margin-bottom: 20px;
+        }
+        .nav a {
+            margin-right: 15px;
+        }
+        .status-pending { color: #ffc107; font-weight: bold; }
+        .status-handled { color: #28a745; font-weight: bold; }
+        .handle-btn {
+            padding: 5px 10px;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+        .handle-btn:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <a href="/">返回首页</a>
+        <a href="/arrivals/">采购到货信息</a>
+        <a href="/inspections/">质量检验记录</a>
+        <a href="/rejections/">不合格产品</a>
+        <span style="float: right; color: #666;">不合格产品处理</span>
+    </div>
+
+    <h2>不合格产品记录</h2>
+
+    {% if not rejections %}
+        <p>暂无不合格产品记录。</p>
+    {% else %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>订单号</th>
+                    <th>产品名称</th>
+                    <th>数量</th>
+                    <th>不合格原因</th>
+                    <th>不合格项目</th>
+                    <th>登记日期</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for item in rejections %}
+                <tr>
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.order_number }}</td>
+                    <td>{{ item.product_name }}</td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.reason }}</td>
+                    <td>
+                        {% if item.unqualified_items %}
+                            {{ item.unqualified_items|join(', ') }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>{{ item.rejection_date }}</td>
+                    <td>
+                        {% if item.status == "待处理" %}
+                            <span class="status-pending">待处理</span>
+                        {% elif item.status == "已处理" %}
+                            <span class="status-handled">已处理</span>
+                        {% else %}
+                            {{ item.status }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if item.status == "待处理" %}
+                            <button class="handle-btn" onclick="handleRejection({{ item.id }})">处理</button>
+                        {% else %}
+                            {{ item.handling_method }} ({{ item.handled_by }})
+                        {% endif %}
+                    </td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <script>
+        function handleRejection(rejectionId) {
+            const method = prompt('请输入处理方式（退货/销毁/返修等）:');
+            const handler = prompt('请输入处理人:');
+
+            if (method && handler) {
+                fetch(`http://localhost:5003/api/rejections/${rejectionId}/handle`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        handling_method: method,
+                        handled_by: handler
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    alert('处理成功');
+                    location.reload();
+                })
+                .catch(error => {
+                    alert('处理失败: ' + error);
+                });
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<h4>采购到货列表</h4>
+
+<form action="/arrivals/add" method="post" class="row g-3 mb-4">
+  <div class="col-md-3">
+    <input type="text" name="item_name" class="form-control" placeholder="物料名称" required>
+  </div>
+  <div class="col-md-2">
+    <input type="number" step="0.01" name="quantity" class="form-control" placeholder="数量" required>
+  </div>
+  <div class="col-md-3">
+    <input type="text" name="supplier" class="form-control" placeholder="供应商" required>
+  </div>
+  <div class="col-md-2">
+    <input type="date" name="arrival_date" class="form-control" required>
+  </div>
+  <div class="col-md-2">
+    <button type="submit" class="btn btn-primary w-100">添加</button>
+  </div>
+</form>
+
+<table class="table table-bordered">
+  <thead><tr><th>ID</th><th>物料</th><th>数量</th><th>供应商</th><th>到货日期</th></tr></thead>
+  <tbody>
+    {% for a in arrivals %}
+    <tr>
+      <td>{{ a.id }}</td>
+      <td>{{ a.item_name }}</td>
+      <td>{{ a.quantity }}</td>
+      <td>{{ a.supplier }}</td>
+      <td>{{ a.arrival_date }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

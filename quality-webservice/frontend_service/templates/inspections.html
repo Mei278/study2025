@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+<h4>质量检验记录</h4>
+
+<form action="/inspections/add" method="post" class="row g-3 mb-4">
+  <div class="col-md-2">
+    <select name="purchase_id" class="form-control" required>
+      <option value="">选择到货批次</option>
+      {% for a in arrivals %}
+        <option value="{{ a.id }}">{{ a.item_name }} ({{ a.id }})</option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="col-md-2">
+    <input type="text" name="item_name" class="form-control" placeholder="物料名称" required>
+  </div>
+  <div class="col-md-2">
+    <input type="number" step="0.01" name="inspected_quantity" class="form-control" placeholder="检验数量" required>
+  </div>
+  <div class="col-md-2">
+    <input type="number" step="0.01" name="passed_quantity" class="form-control" placeholder="合格数量" required>
+  </div>
+  <div class="col-md-2">
+    <input type="number" step="0.01" name="failed_quantity" class="form-control" placeholder="不合格数量" required>
+  </div>
+  <div class="col-md-1">
+    <input type="text" name="status" class="form-control" placeholder="状态" required>
+  </div>
+  <div class="col-md-1">
+    <button type="submit" class="btn btn-success w-100">添加</button>
+  </div>
+</form>
+
+<table class="table table-bordered">
+  <thead><tr><th>ID</th><th>批次ID</th><th>物料</th><th>检验数</th><th>合格</th><th>不合格</th><th>状态</th></tr></thead>
+  <tbody>
+    {% for i in inspections %}
+    <tr>
+      <td>{{ i.id }}</td>
+      <td>{{ i.purchase_id }}</td>
+      <td>{{ i.item_name }}</td>
+      <td>{{ i.inspected_quantity }}</td>
+      <td>{{ i.passed_quantity }}</td>
+      <td>{{ i.failed_quantity }}</td>
+      <td>{{ i.status }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

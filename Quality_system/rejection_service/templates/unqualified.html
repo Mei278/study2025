@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>不合格产品列表</title>
+    <meta charset="UTF-8">
+</head>
+<body>
+    <h2>不合格产品列表</h2>
+    <a href="/rejections/add/">新增不合格记录</a>
+    <table border="1">
+        <tr>
+            <th>ID</th>
+            <th>检验ID</th>
+            <th>订单ID</th>
+            <th>不合格原因</th>
+            <th>处理状态</th>
+            <th>提交日期</th>
+            <th>操作</th>
+        </tr>
+        {% for rejection in rejections %}
+        <tr>
+            <td>{{ rejection[0] }}</td>
+            <td>{{ rejection[1] }}</td>
+            <td>{{ rejection[2] }}</td>
+            <td>{{ rejection[3] }}</td>
+            <td>{{ rejection[4] }}</td>
+            <td>{{ rejection[5] or '' }}</td>
+            <td>
+                <a href="/rejections/edit/{{ rejection[0] }}">编辑</a> |
+                <a href="/rejections/delete/{{ rejection[0] }}">删除</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
