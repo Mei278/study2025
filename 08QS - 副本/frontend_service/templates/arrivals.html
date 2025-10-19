@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>采购到货信息</title>
+    <style>
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            margin: 40px;
+            background-color: #f9f9f9;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 12px 15px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .error {
+            color: red;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .nav {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .nav a {
+            margin-right: 15px;
+        }
+        .status-pending { color: #ffc107; font-weight: bold; }
+        .status-inspecting { color: #17a2b8; font-weight: bold; }
+        .status-pass { color: #28a745; font-weight: bold; }
+        .status-fail { color: #dc3545; font-weight: bold; }
+
+        /* 新增样式 */
+        .toolbar {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+        .search-box {
+            flex: 1;
+            min-width: 200px;
+        }
+        .search-box input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .filter-group {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .filter-group select {
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background: white;
+        }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+        }
+        .btn-primary {
+            background: #007bff;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #0056b3;
+            text-decoration: none;
+            color: white;
+        }
+        .btn-edit {
+            background: #17a2b8;
+            color: white;
+            padding: 4px 8px;
+            margin: 0 2px;
+        }
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+            padding: 4px 8px;
+            margin: 0 2px;
+        }
+        .btn-inspect {
+            background: #28a745;
+            color: white;
+            padding: 4px 8px;
+            margin: 0 2px;
+        }
+        .stats-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        .stat-item {
+            text-align: center;
+            padding: 10px;
+        }
+        .stat-number {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #007bff;
+        }
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .form-actions {
+            text-align: right;
+            margin-top: 20px;
+        }
+        .close {
+            float: right;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #aaa;
+        }
+        .close:hover {
+            color: #000;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <div>
+            <a href="/">返回首页</a>
+            <a href="/arrivals/">采购到货信息</a>
+            <a href="/inspections/">质量检验记录</a>
+            <a href="/rejections/">不合格产品</a>
+        </div>
+        <span style="color: #666;">采购到货信息管理</span>
+    </div>
+
+    <h2>采购到货信息列表</h2>
+
+    <!-- 统计卡片 -->
+    <div class="stats-card">
+        <h3>统计概览</h3>
+        <div class="stats-grid" id="stats-container">
+            <div class="loading">加载统计信息...</div>
+        </div>
+    </div>
+
+    <!-- 工具栏 -->
+    <div class="toolbar">
+        <div class="search-box">
+            <input type="text" id="search-input" placeholder="搜索订单号、供应商或产品名称...">
+        </div>
+        <div class="filter-group">
+            <select id="status-filter">
+                <option value="">所有状态</option>
+                <option value="待检验">待检验</option>
+                <option value="检验中">检验中</option>
+                <option value="检验合格">检验合格</option>
+                <option value="检验不合格">检验不合格</option>
+            </select>
+            <select id="supplier-filter">
+                <option value="">所有供应商</option>
+                <!-- 供应商选项将通过JS动态加载 -->
+            </select>
+            <button class="btn btn-primary" onclick="loadOrders()">搜索</button>
+        </div>
+        <button class="btn btn-primary" onclick="showCreateModal()">+ 新建采购订单</button>
+    </div>
+
+    <!-- 订单表格 -->
+    <div id="orders-container">
+        <div class="loading">加载采购订单数据...</div>
+    </div>
+
+    <!-- 创建/编辑订单模态框 -->
+    <div id="order-modal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h3 id="modal-title">新建采购订单</h3>
+            <form id="order-form">
+                <input type="hidden" id="order-id">
+                <div class="form-group">
+                    <label for="order-number">订单号 *</label>
+                    <input type="text" id="order-number" required>
+                </div>
+                <div class="form-group">
+                    <label for="supplier">供应商 *</label>
+                    <input type="text" id="supplier" required>
+                </div>
+                <div class="form-group">
+                    <label for="product-name">产品名称 *</label>
+                    <input type="text" id="product-name" required>
+                </div>
+                <div class="form-group">
+                    <label for="quantity">数量 *</label>
+                    <input type="number" id="quantity" min="1" required>
+                </div>
+                <div class="form-group">
+                    <label for="arrival-date">到货日期</label>
+                    <input type="date" id="arrival-date">
+                </div>
+                <div class="form-group">
+                    <label for="status">状态</label>
+                    <select id="status">
+                        <option value="待检验">待检验</option>
+                        <option value="检验中">检验中</option>
+                        <option value="检验合格">检验合格</option>
+                        <option value="检验不合格">检验不合格</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn" onclick="closeModal()">取消</button>
+                    <button type="submit" class="btn btn-primary">保存</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // 全局变量
+        let allOrders = [];
+        let suppliers = new Set();
+
+        // 页面加载时初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            loadOrders();
+            loadStats();
+        });
+
+        // 加载订单数据
+        async function loadOrders() {
+            const searchKeyword = document.getElementById('search-input').value;
+            const statusFilter = document.getElementById('status-filter').value;
+            const supplierFilter = document.getElementById('supplier-filter').value;
+
+            let url = 'http://localhost:5001/api/purchase_orders';
+            const params = [];
+
+            if (statusFilter) params.push(`status=${statusFilter}`);
+            if (supplierFilter) params.push(`supplier=${encodeURIComponent(supplierFilter)}`);
+
+            if (params.length > 0) {
+                url += '?' + params.join('&');
+            }
+
+            // 如果有搜索关键词，使用搜索API
+            if (searchKeyword) {
+                url = `http://localhost:5001/api/purchase_orders/search?q=${encodeURIComponent(searchKeyword)}`;
+            }
+
+            try {
+                document.getElementById('orders-container').innerHTML = '<div class="loading">加载采购订单数据...</div>';
+
+                const response = await fetch(url);
+                let orders;
+
+                if (searchKeyword) {
+                    const searchResult = await response.json();
+                    orders = searchResult.results || [];
+                } else {
+                    orders = await response.json();
+                }
+
+                allOrders = orders;
+                renderOrders(orders);
+                updateSupplierFilter(orders);
+
+            } catch (error) {
+                console.error('加载订单失败:', error);
+                document.getElementById('orders-container').innerHTML = '<div class="error">加载订单数据失败，请检查网络连接</div>';
+            }
+        }
+
+        // 渲染订单表格
+        function renderOrders(orders) {
+            if (orders.length === 0) {
+                document.getElementById('orders-container').innerHTML = '<p>暂无采购到货信息。</p>';
+                return;
+            }
+
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>订单号</th>
+                            <th>供应商</th>
+                            <th>产品名称</th>
+                            <th>数量</th>
+                            <th>到货日期</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            orders.forEach(order => {
+                let statusClass = '';
+                let statusText = order.status;
+
+                if (order.status === "待检验") {
+                    statusClass = 'status-pending';
+                } else if (order.status === "检验中") {
+                    statusClass = 'status-inspecting';
+                } else if (order.status === "检验合格") {
+                    statusClass = 'status-pass';
+                    statusText = '✅ 检验合格';
+                } else if (order.status === "检验不合格") {
+                    statusClass = 'status-fail';
+                    statusText = '❌ 检验不合格';
+                }
+
+                html += `
+                    <tr>
+                        <td>${order.id}</td>
+                        <td>${order.order_number}</td>
+                        <td>${order.supplier}</td>
+                        <td>${order.product_name}</td>
+                        <td>${order.quantity}</td>
+                        <td>${order.arrival_date || '-'}</td>
+                        <td><span class="${statusClass}">${statusText}</span></td>
+                        <td>
+                            ${order.status === "待检验" ?
+                                `<a href="/inspection_form/${order.id}" class="btn btn-inspect">去检验</a>` :
+                                ''}
+                            <button class="btn btn-edit" onclick="editOrder(${order.id})">编辑</button>
+                            <button class="btn btn-delete" onclick="deleteOrder(${order.id})">删除</button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            document.getElementById('orders-container').innerHTML = html;
+        }
+
+        // 更新供应商过滤器
+        function updateSupplierFilter(orders) {
+            suppliers.clear();
+            orders.forEach(order => suppliers.add(order.supplier));
+
+            const supplierFilter = document.getElementById('supplier-filter');
+            // 保留"所有供应商"选项
+            const allSuppliersOption = supplierFilter.querySelector('option[value=""]');
+            supplierFilter.innerHTML = '';
+            supplierFilter.appendChild(allSuppliersOption);
+
+            suppliers.forEach(supplier => {
+                const option = document.createElement('option');
+                option.value = supplier;
+                option.textContent = supplier;
+                supplierFilter.appendChild(option);
+            });
+        }
+
+        // 加载统计信息
+        async function loadStats() {
+            try {
+                const response = await fetch('http://localhost:5001/api/purchase_orders/stats');
+                const stats = await response.json();
+
+                let html = `
+                    <div class="stat-item">
+                        <div class="stat-number">${stats.total_orders}</div>
+                        <div class="stat-label">总订单数</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number">${stats.total_quantity}</div>
+                        <div class="stat-label">总产品数</div>
+                    </div>
+                `;
+
+                // 添加状态统计
+                Object.entries(stats.status_stats || {}).forEach(([status, count]) => {
+                    html += `
+                        <div class="stat-item">
+                            <div class="stat-number">${count}</div>
+                            <div class="stat-label">${status}</div>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('stats-container').innerHTML = html;
+            } catch (error) {
+                console.error('加载统计信息失败:', error);
+                document.getElementById('stats-container').innerHTML = '<div class="error">统计信息加载失败</div>';
+            }
+        }
+
+        // 显示创建订单模态框
+        function showCreateModal() {
+            document.getElementById('modal-title').textContent = '新建采购订单';
+            document.getElementById('order-form').reset();
+            document.getElementById('order-id').value = '';
+            document.getElementById('arrival-date').value = new Date().toISOString().split('T')[0];
+            document.getElementById('status').value = '待检验';
+            document.getElementById('order-modal').style.display = 'block';
+        }
+
+        // 编辑订单
+        async function editOrder(orderId) {
+            try {
+                const response = await fetch(`http://localhost:5001/api/purchase_orders/${orderId}`);
+                const order = await response.json();
+
+                document.getElementById('modal-title').textContent = '编辑采购订单';
+                document.getElementById('order-id').value = order.id;
+                document.getElementById('order-number').value = order.order_number;
+                document.getElementById('supplier').value = order.supplier;
+                document.getElementById('product-name').value = order.product_name;
+                document.getElementById('quantity').value = order.quantity;
+                document.getElementById('arrival-date').value = order.arrival_date || '';
+                document.getElementById('status').value = order.status;
+
+                document.getElementById('order-modal').style.display = 'block';
+            } catch (error) {
+                console.error('获取订单详情失败:', error);
+                alert('获取订单详情失败');
+            }
+        }
+
+        // 删除订单
+        async function deleteOrder(orderId) {
+            if (!confirm('确定要删除这个采购订单吗？此操作不可恢复。')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`http://localhost:5001/api/purchase_orders/${orderId}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('订单删除成功');
+                    loadOrders();
+                    loadStats();
+                } else {
+                    const error = await response.json();
+                    alert('删除失败: ' + (error.error || '未知错误'));
+                }
+            } catch (error) {
+                console.error('删除订单失败:', error);
+                alert('删除订单失败，请检查网络连接');
+            }
+        }
+
+        // 关闭模态框
+        function closeModal() {
+            document.getElementById('order-modal').style.display = 'none';
+        }
+
+        // 提交订单表单
+        document.getElementById('order-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const orderId = document.getElementById('order-id').value;
+            const isEdit = !!orderId;
+
+            const orderData = {
+                order_number: document.getElementById('order-number').value,
+                supplier: document.getElementById('supplier').value,
+                product_name: document.getElementById('product-name').value,
+                quantity: parseInt(document.getElementById('quantity').value),
+                arrival_date: document.getElementById('arrival-date').value || null,
+                status: document.getElementById('status').value
+            };
+
+            try {
+                const url = isEdit ?
+                    `http://localhost:5001/api/purchase_orders/${orderId}` :
+                    'http://localhost:5001/api/purchase_orders';
+
+                const method = isEdit ? 'PUT' : 'POST';
+
+                const response = await fetch(url, {
+                    method: method,
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(orderData)
+                });
+
+                if (response.ok) {
+                    closeModal();
+                    alert(isEdit ? '订单更新成功' : '订单创建成功');
+                    loadOrders();
+                    loadStats();
+                } else {
+                    const error = await response.json();
+                    alert((isEdit ? '更新失败: ' : '创建失败: ') + (error.error || '未知错误'));
+                }
+            } catch (error) {
+                console.error('保存订单失败:', error);
+                alert('保存订单失败，请检查网络连接');
+            }
+        });
+
+        // 搜索框回车事件
+        document.getElementById('search-input').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                loadOrders();
+            }
+        });
+
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('order-modal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        };
+    </script>
+</body>
+</html>

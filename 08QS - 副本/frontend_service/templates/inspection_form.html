@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>质量检验表单</title>
+    <style>
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            margin: 40px;
+            background-color: #f9f9f9;
+        }
+        .form-container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h2 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        .order-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .order-info table {
+            width: 100%;
+        }
+        .order-info td {
+            padding: 5px 10px;
+        }
+        .check-items {
+            margin: 10px 0;
+        }
+        .check-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .check-item input[type="checkbox"] {
+            width: auto;
+            margin-right: 10px;
+        }
+        .buttons {
+            text-align: center;
+            margin-top: 30px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 0 10px;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        button[type="button"] {
+            background: #6c757d;
+        }
+        button[type="button"]:hover {
+            background: #545b62;
+        }
+        .nav {
+            margin-bottom: 20px;
+        }
+        .nav a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        .nav a:hover {
+            text-decoration: underline;
+        }
+        .required::after {
+            content: " *";
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <a href="/arrivals/">← 返回采购到货信息</a>
+    </div>
+
+    <div class="form-container">
+        <h2>质量检验表单</h2>
+
+        <!-- 订单信息展示 -->
+        <div class="order-info">
+            <h3>采购订单信息</h3>
+            <table>
+                <tr>
+                    <td><strong>订单号:</strong></td>
+                    <td>{{ order.order_number }}</td>
+                    <td><strong>供应商:</strong></td>
+                    <td>{{ order.supplier }}</td>
+                </tr>
+                <tr>
+                    <td><strong>产品名称:</strong></td>
+                    <td>{{ order.product_name }}</td>
+                    <td><strong>数量:</strong></td>
+                    <td>{{ order.quantity }}</td>
+                </tr>
+                <tr>
+                    <td><strong>到货日期:</strong></td>
+                    <td>{{ order.arrival_date }}</td>
+                    <td><strong>当前状态:</strong></td>
+                    <td>{{ order.status }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <form action="/submit_inspection" method="post">
+            <input type="hidden" name="order_id" value="{{ order.id }}">
+            <input type="hidden" name="order_number" value="{{ order.order_number }}">
+            <input type="hidden" name="product_name" value="{{ order.product_name }}">
+            <input type="hidden" name="quantity" value="{{ order.quantity }}">
+
+            <div class="form-group">
+                <label for="inspector" class="required">检验员</label>
+                <input type="text" id="inspector" name="inspector" required placeholder="请输入检验员姓名">
+            </div>
+
+            <div class="form-group">
+                <label for="result" class="required">检验结果</label>
+                <select id="result" name="result" required onchange="toggleUnqualifiedItems()">
+                    <option value="">请选择检验结果</option>
+                    <option value="合格">合格</option>
+                    <option value="不合格">不合格</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="required">检验项目</label>
+                <div class="check-items">
+                    <div class="check-item">
+                        <input type="checkbox" name="check_item" value="外观检查" id="check1">
+                        <label for="check1">外观检查</label>
+                    </div>
+                    <div class="check-item">
+                        <input type="checkbox" name="check_item" value="尺寸检查" id="check2">
+                        <label for="check2">尺寸检查</label>
+                    </div>
+                    <div class="check-item">
+                        <input type="checkbox" name="check_item" value="功能测试" id="check3">
+                        <label for="check3">功能测试</label>
+                    </div>
+                    <div class="check-item">
+                        <input type="checkbox" name="check_item" value="包装检查" id="check4">
+                        <label for="check4">包装检查</label>
+                    </div>
+                    <div class="check-item">
+                        <input type="checkbox" name="check_item" value="材质检验" id="check5">
+                        <label for="check5">材质检验</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group" id="unqualified-items-group" style="display: none;">
+                <label>不合格项目</label>
+                <div class="check-items">
+                    <div class="check-item">
+                        <input type="checkbox" name="unqualified_item" value="外观缺陷" id="unq1">
+                        <label for="unq1">外观缺陷</label>
+                    </div>
+                    <div class="check-item">
+                        <input type="checkbox" name="unqualified_item" value="尺寸不符" id="unq2">
+                        <label for="unq2">尺寸不符</label>
+                    </div>
+                    <div class="check-item">
+                        <input type="checkbox" name="unqualified_item" value="功能故障" id="unq3">
+                        <label for="unq3">功能故障</label>
+                    </div>
+                    <div class="check-item">
+                        <input type="checkbox" name="unqualified_item" value="包装破损" id="unq4">
+                        <label for="unq4">包装破损</label>
+                    </div>
+                    <div class="check-item">
+                        <input type="checkbox" name="unqualified_item" value="材质不符" id="unq5">
+                        <label for="unq5">材质不符</label>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">备注</label>
+                <textarea id="notes" name="notes" rows="3" placeholder="请输入检验备注信息"></textarea>
+            </div>
+
+            <div class="buttons">
+                <button type="submit">提交检验</button>
+                <button type="button" onclick="history.back()">取消</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function toggleUnqualifiedItems() {
+            const result = document.getElementById('result').value;
+            const unqualifiedGroup = document.getElementById('unqualified-items-group');
+            if (result === '不合格') {
+                unqualifiedGroup.style.display = 'block';
+            } else {
+                unqualifiedGroup.style.display = 'none';
+            }
+        }
+
+        // 表单提交前处理数据
+        document.querySelector('form').addEventListener('submit', function(e) {
+            // 收集检验项目
+            const checkItems = Array.from(document.querySelectorAll('input[name="check_item"]:checked'))
+                .map(cb => cb.value);
+
+            // 收集不合格项目
+            const unqualifiedItems = Array.from(document.querySelectorAll('input[name="unqualified_item"]:checked'))
+                .map(cb => cb.value);
+
+            // 创建隐藏字段存储JSON数据
+            const checkItemsInput = document.createElement('input');
+            checkItemsInput.type = 'hidden';
+            checkItemsInput.name = 'check_items';
+            checkItemsInput.value = JSON.stringify(checkItems);
+            this.appendChild(checkItemsInput);
+
+            const unqualifiedItemsInput = document.createElement('input');
+            unqualifiedItemsInput.type = 'hidden';
+            unqualifiedItemsInput.name = 'unqualified_items';
+            unqualifiedItemsInput.value = JSON.stringify(unqualifiedItems);
+            this.appendChild(unqualifiedItemsInput);
+
+            // 验证至少选择了一个检验项目
+            if (checkItems.length === 0) {
+                e.preventDefault();
+                alert('请至少选择一个检验项目');
+                return false;
+            }
+
+            // 验证如果不合格，至少选择了一个不合格项目
+            const result = document.getElementById('result').value;
+            if (result === '不合格' && unqualifiedItems.length === 0) {
+                e.preventDefault();
+                alert('请至少选择一个不合格项目');
+                return false;
+            }
+        });
+    </script>
+</body>
+</html>

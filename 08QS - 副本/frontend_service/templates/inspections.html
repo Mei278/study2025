@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>质量检验记录</title>
+    <style>
+        body {
+            font-family: "Microsoft YaHei", sans-serif;
+            margin: 40px;
+            background-color: #f9f9f9;
+        }
+        h2 {
+            color: #333;
+        }
+        table {
+            width: 95%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: #fff;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px 12px;
+            text-align: center;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        a {
+            color: #007bff;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .error {
+            color: red;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .nav {
+            margin-bottom: 20px;
+        }
+        .nav a {
+            margin-right: 15px;
+        }
+        .status-pass {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .status-fail {
+            color: #dc3545;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <a href="/">返回首页</a>
+        <a href="/arrivals/">采购到货信息</a>
+        <a href="/inspections/">质量检验记录</a>
+        <a href="/rejections/">不合格产品</a>
+        <span style="float: right; color: #666;">质量检验记录</span>
+    </div>
+
+    <h2>质量检验记录</h2>
+
+    {% if not inspections %}
+        <p>暂无质量检验记录。</p>
+    {% else %}
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>订单号</th>
+                    <th>产品名称</th>
+                    <th>检验员</th>
+                    <th>检验结果</th>
+                    <th>不合格项</th>
+                    <th>检验日期</th>
+                    <th>备注</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for rec in inspections %}
+                <tr>
+                    <td>{{ rec.id }}</td>
+                    <td>{{ rec.order_number }}</td>
+                    <td>{{ rec.product_name }}</td>
+                    <td>{{ rec.inspector }}</td>
+                    <td>
+                        {% if rec.result == "合格" %}
+                            <span class="status-pass">✅ {{ rec.result }}</span>
+                        {% elif rec.result == "不合格" %}
+                            <span class="status-fail">❌ {{ rec.result }}</span>
+                        {% else %}
+                            {{ rec.result }}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if rec.unqualified_items %}
+                            {{ rec.unqualified_items|join(', ') }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>{{ rec.inspection_date }}</td>
+                    <td>{{ rec.notes or '-' }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+</body>
+</html>
